@@ -1,32 +1,32 @@
 plugins {
-    id("fabric-loom") version "1.11-SNAPSHOT"
+    alias(libs.plugins.fabric.loom)
 }
 
 base {
-    archivesName = project.property("archives_base_name").toString()
-    version = project.property("mod_version").toString()
-    group = project.property("maven_group").toString()
+    archivesName = properties["archives_base_name"] as String
+    version = libs.versions.mod.version.get()
+    group = properties["maven_group"] as String
 }
 
 repositories {
-    maven("https://maven.meteordev.org/releases") {
+    maven {
         name = "meteor-maven"
+        url = uri("https://maven.meteordev.org/releases")
     }
-
-    maven("https://maven.meteordev.org/snapshots") {
+    maven {
         name = "meteor-maven-snapshots"
+        url = uri("https://maven.meteordev.org/snapshots")
     }
-    mavenCentral()
 }
 
 dependencies {
     // Fabric
-    minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
-    modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
+    minecraft(libs.minecraft)
+    mappings(variantOf(libs.yarn) { classifier("v2") })
+    modImplementation(libs.fabric.loader)
 
     // Meteor
-    modImplementation("meteordevelopment:meteor-client:${project.property("minecraft_version")}-SNAPSHOT")
+    modImplementation(libs.meteor.client)
 }
 
 loom {
@@ -35,15 +35,25 @@ loom {
 
 tasks {
     processResources {
-        val propertiesMap = mapOf(
+        val propertyMap = mapOf(
             "version" to project.version,
-            "minecraft_version" to project.property("minecraft_version"),
-            "loader_version" to project.property("loader_version")
+            "mc_version" to libs.versions.minecraft.get()
         )
 
-        inputs.properties(propertiesMap)
+        inputs.properties(propertyMap)
+
+        filteringCharset = "UTF-8"
+
         filesMatching("fabric.mod.json") {
-            expand(propertiesMap)
+            expand(propertyMap)
+        }
+    }
+
+    jar {
+        inputs.property("archivesName", project.base.archivesName.get())
+
+        from("LICENSE") {
+            rename { "${it}_${inputs.properties["archivesName"]}" }
         }
     }
 
@@ -53,16 +63,9 @@ tasks {
     }
 
     withType<JavaCompile> {
+        options.encoding = "UTF-8"
         options.release = 21
         options.compilerArgs.add("-Xlint:deprecation")
         options.compilerArgs.add("-Xlint:unchecked")
-    }
-
-    javadoc {
-        with(options as StandardJavadocDocletOptions) {
-            addStringOption("Xdoclint:none", "-quiet")
-            addStringOption("encoding", "UTF-8")
-            addStringOption("charSet", "UTF-8")
-        }
     }
 }

@@ -72,6 +72,10 @@ public class HIGTools extends MeteorAddon {
         modules.add(new OffhandManager());
         modules.add(new ScaffoldHIG());
 
+        // moarrr Modules
+        modules.add(new CreativeFly());
+        modules.add(new MassTPA());
+
         // Borers
         modules.add(new AxisBorer());
         modules.add(new NegNegBorer());
